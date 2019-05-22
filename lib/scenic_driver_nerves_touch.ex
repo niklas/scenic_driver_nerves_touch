@@ -103,7 +103,7 @@ defmodule Scenic.Driver.Nerves.Touch do
 
   ## Pressure Sensitivity
 
-  The toouchscreen reports the amount of pressure usually in a range of 0.255.
+  The touchscreen reports the amount of pressure usually in a range of 0..255.
   The configurable value represents the threshold from which on the touch will
   be interpreted as a click. Below that value, the touch will only cause a mouse
   movement to be simulated.
@@ -176,7 +176,7 @@ defmodule Scenic.Driver.Nerves.Touch do
           nil
       end
 
-    pressure_sensitivity = Map.get(config, :pressure_sensitivity, @pressure_sensitivity)
+    pressure_sensitivity = Keyword.get(config, :pressure_sensitivity, @pressure_sensitivity)
 
     state = %{
       device: device,

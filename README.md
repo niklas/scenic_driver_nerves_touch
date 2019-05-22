@@ -36,7 +36,8 @@ to the driver list in your ViewPort's config.exs file.
               module: Scenic.Driver.Nerves.Touch,
               opts: [
                 device: "FT5406 memory based driver",
-                calibration: {{1,0,0},{0,1,0}}
+                calibration: {{1,0,0},{0,1,0}},
+                pressure_sensitivity: 50
               ],
             }
           ]
@@ -91,3 +92,11 @@ a simple calibration by providing scale factors for `ax` and `ay`.
 The calibration is this part of the configuration
 
     calibration: {{1,0,0},{0,1,0}}
+
+
+## Pressure Sensitivity
+
+The touchscreen reports the amount of pressure usually in a range of 0..255.
+The configurable value represents the threshold from which on the touch will
+be interpreted as a click. Below that value, the touch will only cause a mouse
+movement to be simulated.
