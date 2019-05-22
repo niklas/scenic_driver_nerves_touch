@@ -45,6 +45,7 @@ defmodule Scenic.Driver.Nerves.Touch do
                 opts: [
                   device: "FT5406 memory based driver",
                   calibration: {{1,0,0},{0,1,0}},
+                  pressure_sensitivity: 50
                 ],
               }
             ]
@@ -99,6 +100,13 @@ defmodule Scenic.Driver.Nerves.Touch do
   The calibration is this part of the configuration
 
       calibration: {{1,0,0},{0,1,0}}
+
+  ## Pressure Sensitivity
+
+  The toouchscreen reports the amount of pressure usually in a range of 0.255.
+  The configurable value represents the threshold from which on the touch will
+  be interpreted as a click. Below that value, the touch will only cause a mouse
+  movement to be simulated.
   """
 
   use Scenic.ViewPort.Driver
@@ -112,6 +120,7 @@ defmodule Scenic.Driver.Nerves.Touch do
   # @port  '/scenic_driver_rpi_touch'
 
   @init_retry_ms 400
+  @pressure_sensitivity 50
 
   # ============================================================================
   # client callable api
@@ -167,6 +176,8 @@ defmodule Scenic.Driver.Nerves.Touch do
           nil
       end
 
+    pressure_sensitivity = Map.get(config, :pressure_sensitivity, @pressure_sensitivity)
+
     state = %{
       device: device,
       event_path: nil,
@@ -180,6 +191,7 @@ defmodule Scenic.Driver.Nerves.Touch do
       mouse_event: nil,
       config: config,
       calibration: calibration,
+      pressure_sensitivity: pressure_sensitivity,
       screen_size: screen_size
     }
 
@@ -461,6 +473,34 @@ defmodule Scenic.Driver.Nerves.Touch do
          {:ev_abs, :abs_mt_position_y, y}
        ) do
     %{state | mouse_y: y}
+  end
+
+  defp simulate_mouse(
+         state,
+         {:ev_abs, :abs_x, x}
+       ) do
+    %{state | mouse_x: x}
+  end
+
+  defp simulate_mouse(
+         state,
+         {:ev_abs, :abs_y, y}
+       ) do
+    %{state | mouse_y: y}
+  end
+
+  defp simulate_mouse(
+         %{pressure_sensitivity: pressure_sensitivity} = state,
+         {:ev_abs, :abs_pressure, pressure}
+       ) do
+    mouse_event =
+      cond do
+        pressure == 0 -> :mouse_up
+        pressure < pressure_sensitivity -> :mouse_move
+        true -> :mouse_down
+      end
+
+    %{state | mouse_event: mouse_event}
   end
 
   # ignore everything else
